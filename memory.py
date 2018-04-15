@@ -1,6 +1,30 @@
 #!/usr/bin/python
 import threading
 from collections import deque
+class virtualClock (threading.Thread):
+   def __init__(self, threadID, name,start1,stop):
+      threading.Thread.__init__(self)
+      self.threadID = threadID
+      self.name = name
+      self.start1=start1
+      self.stop=stop 
+   def run(self):
+      print "Starting " + self.name
+      time_in_memory(self.name,1)
+
+      print "time completed"
+      print ("start is : ",self.start1)
+      print ("stop is : ",self.stop)
+      remove_from_memory(self.start1,self.stop)
+      print "Exiting " + self.name + str(self.threadID)
+
+def time_in_memory(threadName, delay):
+	i=delay
+	while(i<=100):
+		i=i+1
+
+
+
 non_processed_process=[]
 def MMU(proc_no,process_mem_size):
 	counter=0
@@ -11,19 +35,31 @@ def MMU(proc_no,process_mem_size):
 			counter=counter+1
 			if counter==process_mem_size:
 				stop=i
-				# print "block available from location: " + str(start) + " to " + str(stop)
+				print "block available from location: " + str(start) + " to " + str(stop)
+				new_start=start
 				for x in range(start,stop+1):
-					memory[start]=1
+					memory[start]=1 #inserting block into memory
 					start=start+1
+				
+				thread = virtualClock(1, "Thread-1",new_start,stop)
+				thread.start()
 				break
 		if (i==(mem_size-1) and (counter!=process_mem_size)):
 			non_processed_process.append(proc_no)
+			print ("i is: "+str(i)+ "mem size is :" +str(mem_size-1)+ " "+ str(counter)+" space not available")
 
-			# print ("i is: "+str(i)+ "mem size is :" +str(mem_size-1)+ " "+ str(counter)+" space not available")
+	# for p in non_processed_process:
+	# 	if p is not None:
+	# 		# print non_processed_process 
 
-	
-# print non_processed_process
-mem_size=2000
+def remove_from_memory(start,stop):
+	print ("before: ",memory)
+	for i in range(0,400):
+		memory[i]=None
+	print ("after: ",memory)
+
+
+mem_size=1000
 # raw_input("Memory Size: ")
 # mem_policy=raw_input("1-VSP,2-PAG,3-SEG: ")
 # if (mem_policy == '1' or mem_policy == '3'):
@@ -116,7 +152,8 @@ for i in chunk_info_int:
 # print (arrival_time_liness)
 # print (life_time_liness)
 # print (total_chunk_size)
-process_nos_stripped1=[1,2,3,4,5,6,7,8]
+
+process_nos_stripped1=[1,2]
 count=0
 for p in process_nos_stripped1:
 	current_process_arrival_time=arrival_time_liness[count]
@@ -133,7 +170,7 @@ for p in process_nos_stripped1:
 
 	count=count+1
 # print memory
-print non_processed_process
+# print non_processed_process
 
 
 
