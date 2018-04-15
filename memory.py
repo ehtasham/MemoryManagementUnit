@@ -1,25 +1,52 @@
 #!/usr/bin/python
-mem_size=raw_input("Memory Size: ")
-mem_policy=raw_input("1-VSP,2-PAG,3-SEG: ")
-if (mem_policy == '1' or mem_policy == '3'):
-	fitness_algo=raw_input("1-First Fit, 2-Best Fit: ")
-	print("Fitness Algo: "+fitness_algo)
-elif(mem_policy=='2'):
-	page_size=raw_input("Page/Frame Size: ")
-	print("Page Size:"+page_size)
-else:
-	print("Wrong Input")
-	exit(1)
-print("Memory Policy: "+mem_policy)
-print("Memory Size: "+mem_size)
-work_load_name=raw_input("WorkLoad File Name: ")
-print("WorkLoad File Name: "+ work_load_name)
+import threading
+from collections import deque
+non_processed_process=[]
+def MMU(proc_no,process_mem_size):
+	counter=0
+	for i in range(0,mem_size):
+		if memory[i] is None:
+			if counter==0:
+				start=i
+			counter=counter+1
+			if counter==process_mem_size:
+				stop=i
+				# print "block available from location: " + str(start) + " to " + str(stop)
+				for x in range(start,stop+1):
+					memory[start]=1
+					start=start+1
+				break
+		if (i==(mem_size-1) and (counter!=process_mem_size)):
+			non_processed_process.append(proc_no)
 
+			# print ("i is: "+str(i)+ "mem size is :" +str(mem_size-1)+ " "+ str(counter)+" space not available")
+
+	
+# print non_processed_process
+mem_size=2000
+# raw_input("Memory Size: ")
+# mem_policy=raw_input("1-VSP,2-PAG,3-SEG: ")
+# if (mem_policy == '1' or mem_policy == '3'):
+# 	fitness_algo=raw_input("1-First Fit, 2-Best Fit: ")
+# 	print("Fitness Algo: "+fitness_algo)
+# elif(mem_policy=='2'):
+# 	page_size=raw_input("Page/Frame Size: ")
+# 	print("Page Size:"+page_size)
+# else:
+# 	print("Wrong Input")
+# 	exit(1)
+# print("Memory Policy: "+mem_policy)
+# print("Memory Size: "+mem_size)
+work_load_name="inputs1.txt"
+# raw_input("WorkLoad File Name: ")
+# print("WorkLoad File Name: "+ work_load_name)
+
+memory=[None] * mem_size
 
 
 fo=open("input1.txt","rw+")
 total_processes=int(fo.read(1))
-print ("no of process: ",total_processes)
+# print ("no of process: ",total_processes)
 
 process_no_line=1
 processes_no_lines=[]
@@ -56,7 +83,10 @@ for i, line in enumerate(fo):
 	if i in address_space:
 		line=line.split()
 		chunk_info.append(line)
-
+fo.close()
+process_nos_stripped=[]
+for process in process_nos:
+	process_nos_stripped.append(process.strip())
 
 #code to extrace chunk information
 #chunkinfo[i][0]=no_of_chunks
@@ -66,13 +96,46 @@ for i, line in enumerate(fo):
 # 	for j in range(1,int(chunk_info[i][0])+1):
 # 		print ("chunk size of process ",i, "are", chunk_info[i][j])
 
+process_nos_stripped=map(int,process_nos_stripped)	
+arrival_time_liness=map(int,arrival_time_liness)	
+life_time_liness=map(int,life_time_liness)	
+
+
+# print (chunk_info)
+chunk_info_int=[]
+total_chunk_size=[]
+for i in chunk_info:
+	i=map(int,i)
+	chunk_info_int.append(i)
+count=0
+for i in chunk_info_int:
+	del	i[0]
+	total_chunk_size.append(sum(i))
+
+# print (process_nos_stripped)
+# print (arrival_time_liness)
+# print (life_time_liness)
+# print (total_chunk_size)
+process_nos_stripped1=[1,2,3,4,5,6,7,8]
+count=0
+for p in process_nos_stripped1:
+	current_process_arrival_time=arrival_time_liness[count]
+	current_process_life_time=life_time_liness[count]
+	current_process_memory_size=total_chunk_size[count]
+	# print(p, " before: ",current_process_life_time)
+	# while(current_process_life_time != 0):
+	# print "current_process_memory_size: "+str(current_process_memory_size)
+	MMU(p,current_process_memory_size)
+	# print("here")
+	# print ("count"+str(count))	
+		# current_process_life_time=current_process_life_time-1
+	# print(p ," after: ",current_process_life_time)
+
+	count=count+1
+# print memory
+print non_processed_process
 
 
 
-print (process_nos)
-print (arrival_time_liness)
-print (life_time_liness)
-print (chunk_info)
 
 
-fo.close()
