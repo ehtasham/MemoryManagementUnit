@@ -2,64 +2,49 @@
 import threading
 from collections import deque
 class virtualClock (threading.Thread):
-   def __init__(self, threadID, name,start1,stop):
+   def __init__(self, threadID, threadName,processAllocationStart,processAllocationEnd):
       threading.Thread.__init__(self)
-      self.threadID = threadID
-      self.name = name
-      self.start1=start1
-      self.stop=stop 
+      self.threadID = threadID # Thread ID
+      self.threadName = threadName # Thread Name
+      self.processAllocationStart=processAllocationStart #start of Process Allocation
+      self.processAllocationEnd=processAllocationEnd # end of Process Allocations
    def run(self):
-      print "Starting " + self.name
-      time_in_memory(self.name,1)
-
-      print "time completed"
-      print ("start is : ",self.start1)
-      print ("stop is : ",self.stop)
-      remove_from_memory(self.start1,self.stop)
-      print "Exiting " + self.name + str(self.threadID)
+      time_in_memory(self.threadName,1)
+      remove_from_memory(self.processAllocationStart,self.processAllocationEnd)
 
 def time_in_memory(threadName, delay):
 	i=delay
 	while(i<=100):
 		i=i+1
 
-
-
 non_processed_process=[]
-def MMU(proc_no,process_mem_size):
-	counter=0
-	for i in range(0,mem_size):
-		if memory[i] is None:
-			if counter==0:
-				start=i
-			counter=counter+1
-			if counter==process_mem_size:
-				stop=i
-				print "block available from location: " + str(start) + " to " + str(stop)
-				new_start=start
-				for x in range(start,stop+1):
-					memory[start]=1 #inserting block into memory
-					start=start+1
-				
-				thread = virtualClock(1, "Thread-1",new_start,stop)
-				thread.start()
+def MMU(processNo,processMemorySize):
+	countEmptyLocations=0 #counter to find empty locations is memory
+	for i in range(0,memory_size): # Traverse whole memory
+		if memory[i] is None: # check if location is empty
+			if countEmptyLocations==0: #First Empty Locations
+				emptyLocationsStart=i #Start of Empty Location
+			countEmptyLocations=countEmptyLocations+1 #increment location counter
+			if countEmptyLocations==processMemorySize: #block of process size is available
+				endEmptyLocations=i #End of Empty Locations
+				print "block available from location: " + str(emptyLocationsStart) + " to " + str(endEmptyLocations)
+				processAllocationStart=emptyLocationsStart
+				for x in range(emptyLocationsStart,endEmptyLocations+1):
+					memory[emptyLocationsStart]=1 #inserting block into memory
+					emptyLocationsStart=emptyLocationsStart+1 			
+				thread = virtualClock(1, "Thread",processAllocationStart,endEmptyLocations) #Creating Thread for timer
+				thread.start() #starting Thread
 				break
-		if (i==(mem_size-1) and (counter!=process_mem_size)):
-			non_processed_process.append(proc_no)
-			print ("i is: "+str(i)+ "mem size is :" +str(mem_size-1)+ " "+ str(counter)+" space not available")
+		if (i==(memory_size-1) and (countEmptyLocations!=processMemorySize)):
+			non_processed_process.append(processNo)
+			print ("i is: "+str(i)+ "mem size is :" +str(memory_size-1)+ " "+ str(countEmptyLocations)+" space not available")
 
-	# for p in non_processed_process:
-	# 	if p is not None:
-	# 		# print non_processed_process 
-
-def remove_from_memory(start,stop):
-	print ("before: ",memory)
+def remove_from_memory(processAllocationStart,processAllocationEnd):
 	for i in range(0,400):
 		memory[i]=None
-	print ("after: ",memory)
 
 
-mem_size=1000
+memory_size=1000
 # raw_input("Memory Size: ")
 # mem_policy=raw_input("1-VSP,2-PAG,3-SEG: ")
 # if (mem_policy == '1' or mem_policy == '3'):
@@ -73,104 +58,90 @@ mem_size=1000
 # 	exit(1)
 # print("Memory Policy: "+mem_policy)
 # print("Memory Size: "+mem_size)
-work_load_name="inputs1.txt"
+workLoadName="input1.txt"
 # raw_input("WorkLoad File Name: ")
-# print("WorkLoad File Name: "+ work_load_name)
 
-memory=[None] * mem_size
+memory=[None] * memory_size
 
+fo=open(workLoadName,"rw+")
+totalProcesses=int(fo.read(1))
 
-fo=open("input1.txt","rw+")
-total_processes=int(fo.read(1))
-# print ("no of process: ",total_processes)
+processNoLine=1
+processNoLines=[]
+processNos=[]
 
-process_no_line=1
-processes_no_lines=[]
-process_nos=[]
+timeLines=[]
+arrivalTimeLiness=[]
+timeLinesLineNo=2	
+lifeTimeLiness=[]
 
-time_lines=[]
-arrival_time_liness=[]
-time_lines_line_no=2	
-life_time_liness=[]
-
-address_space_line_no=3
-address_space=[]
-no_of_chunks=[]
-chunk_sizes=[[]]
+addressSpaceLineNo=3
+addressSpace=[]
+noOfChunks=[]
+chunkSizes=[[]]
 
 
-while(total_processes!=0):
-	processes_no_lines.append(process_no_line)
-	time_lines.append(time_lines_line_no)
-	address_space.append(address_space_line_no)
-	address_space_line_no=address_space_line_no+4
-	time_lines_line_no=time_lines_line_no+4
-	process_no_line=process_no_line+4
-	total_processes=total_processes-1
+while(totalProcesses!=0):
+	processNoLines.append(processNoLine)
+	timeLines.append(timeLinesLineNo)
+	addressSpace.append(addressSpaceLineNo)
+	addressSpaceLineNo=addressSpaceLineNo+4
+	timeLinesLineNo=timeLinesLineNo+4
+	processNoLine=processNoLine+4
+	totalProcesses=totalProcesses-1
 
 chunk_info=[]
 for i, line in enumerate(fo):
-	if i in time_lines:
+	if i in timeLines:
 		new_line=line.split()
-		arrival_time_liness.append(new_line[0])
-		life_time_liness.append(new_line[1])
-	if i in processes_no_lines:
-		process_nos.append(line)
-	if i in address_space:
+		arrivalTimeLiness.append(new_line[0])
+		lifeTimeLiness.append(new_line[1])
+	if i in processNoLines:
+		processNos.append(line)
+	if i in addressSpace:
 		line=line.split()
 		chunk_info.append(line)
 fo.close()
-process_nos_stripped=[]
-for process in process_nos:
-	process_nos_stripped.append(process.strip())
+processNosStripped=[]
+for process in processNos:
+	processNosStripped.append(process.strip())
 
 #code to extrace chunk information
-#chunkinfo[i][0]=no_of_chunks
-#loop through no_of_chunks and extract their sizes
-# for i in range(0,total_processes):
+#chunkinfo[i][0]=noOfChunks
+#loop through noOfChunks and extract their sizes
+# for i in range(0,totalProcesses):
 # 	print ("no of chunks in process no " , i, "are " , int(chunk_info[i][0]))
 # 	for j in range(1,int(chunk_info[i][0])+1):
 # 		print ("chunk size of process ",i, "are", chunk_info[i][j])
 
-process_nos_stripped=map(int,process_nos_stripped)	
-arrival_time_liness=map(int,arrival_time_liness)	
-life_time_liness=map(int,life_time_liness)	
+processNosStripped=map(int,processNosStripped)	
+arrivalTimeLiness=map(int,arrivalTimeLiness)	
+lifeTimeLiness=map(int,lifeTimeLiness)	
 
-
-# print (chunk_info)
-chunk_info_int=[]
-total_chunk_size=[]
-for i in chunk_info:
-	i=map(int,i)
-	chunk_info_int.append(i)
+chunkInfoInt=[]
+totalChunkSize=[]
+for chunk in chunk_info:
+	chunk=map(int,chunk)
+	chunkInfoInt.append(chunk)
 count=0
-for i in chunk_info_int:
-	del	i[0]
-	total_chunk_size.append(sum(i))
+for chunk in chunkInfoInt:
+	del	chunk[0]
+	totalChunkSize.append(sum(chunk))
 
-# print (process_nos_stripped)
-# print (arrival_time_liness)
-# print (life_time_liness)
-# print (total_chunk_size)
+# print (processNosStripped)
+# print (arrivalTimeLiness)
+# print (lifeTimeLiness)
+# print (totalChunkSize)
 
-process_nos_stripped1=[1,2]
+processNosStripped1=[1,2]
 count=0
-for p in process_nos_stripped1:
-	current_process_arrival_time=arrival_time_liness[count]
-	current_process_life_time=life_time_liness[count]
-	current_process_memory_size=total_chunk_size[count]
-	# print(p, " before: ",current_process_life_time)
-	# while(current_process_life_time != 0):
-	# print "current_process_memory_size: "+str(current_process_memory_size)
+for p in processNosStripped1:
+	current_process_arrival_time=arrivalTimeLiness[count]
+	current_process_life_time=lifeTimeLiness[count]
+	current_process_memory_size=totalChunkSize[count]
 	MMU(p,current_process_memory_size)
-	# print("here")
-	# print ("count"+str(count))	
-		# current_process_life_time=current_process_life_time-1
-	# print(p ," after: ",current_process_life_time)
-
 	count=count+1
-# print memory
-# print non_processed_process
+
 
 
 
