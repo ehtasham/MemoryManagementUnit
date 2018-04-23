@@ -2,31 +2,46 @@
 import threading
 import time
 
+class lifeTimeThread(threading.Thread):
+   	def __init__(self, threadID, name,lifeTime,processNo,processAllocationStart,processAllocationEnd):
+   		threading.Thread.__init__(self)
+   		self.threadID = threadID
+   		self.name = name
+   		self.lifeTime=lifeTime
+   		self.processNo=processNo
+   		self.processAllocationStart=processAllocationStart
+   		self.processAllocationEnd=processAllocationEnd
+   	def run(self):
+   		self.timeInMemory(self.lifeTime,self.processNo)
+   		self.removeFromMemory(self.processAllocationStart,self.processAllocationEnd,self.processNo)
+
+	def timeInMemory(self,lifeTime,processNo):
+   		print("process No: "+str(processNo)+" time start")
+   		while(lifeTime!=0):
+			lifeTime=lifeTime-1
+		print("process No: "+str(processNo)+" time end")
+		return lifeTime
+
+	def removeFromMemory(self,processAllocationStart,processAllocationEnd,processNo):
+   		for i in range(processAllocationStart,processAllocationEnd+1):
+			memory[i]=None
+		print("process No: "+str(processNo)+" removed From Memory")
+
 class myThread(threading.Thread):
-   def __init__(self, threadID, name, timeCounter):
-      threading.Thread.__init__(self)
-      self.threadID = threadID
-      self.name = name
-      self.timeCounter = timeCounter
-   def run(self):
-      self.clock()
+	def __init__(self, threadID, name, timeCounter):
+		threading.Thread.__init__(self)
+		self.threadID = threadID
+		self.name = name
+		self.timeCounter = timeCounter
+	def run(self):
+		self.clock()
 
-   def clock(self):
-   	while True:
-		self.timeCounter += 1
+   	def clock(self):
+   		while True:
+			self.timeCounter += 1
 
-   def timePassed(self):
-	return self.timeCounter
-# Create new threads:
-
-
-	# def run(self):
-	# 	self.clock()
-   		# self.lifeTime=self.timeInMemory(self.lifeTime,self.processNo)
-   		# if self.lifeTime==0:
-   		# 	self.removeFromMemory(self.processAllocationStart,self.processAllocationEnd,self.processNo)
-
-
+	def timePassed(self):
+		return self.timeCounter
 
 nonProcessedProcesses=[]
 def MMU(processNo,processMemorySize,lifeTime):
@@ -44,35 +59,23 @@ def MMU(processNo,processMemorySize,lifeTime):
 				processAllocationEnd=endEmptyLocations
 				for x in range(processAllocationStart,processAllocationEnd+1):
 					memory[x]=1 #inserting block into memory
-					# emptyLocationsStart=emptyLocationsStart+1 
-				# print("process No: "+ str(processNo) + " Allocated space from "+str(processAllocationStart)+" to "+str(processAllocationEnd))			
-				# thread = virtualClock(1, "Thread",processAllocationStart,processAllocationEnd,lifeTime,processNo,0) #Creating Thread for timer
-				# thread.daemon = True
-				# thread.start() #starting Thread
+				print("process No: "+ str(processNo) + " Allocated space from "+str(processAllocationStart)+" to "+str(processAllocationEnd))			
+				threadLifeTime = lifeTimeThread(1, "Thread-2",lifeTime,processNo,processAllocationStart,processAllocationEnd)
+				threadLifeTime.daemon = True
+				threadLifeTime.start()
 				break
-			else:
-				if memory[i+1] is None:
-					continue
-				else:
-					print("process Memory size is: "+ str(processMemorySize))
-					print("free space available from: " +str(emptyLocationsStart)+" to "+ str(i))
+			# else:
+			# 	if memory[i+1] is None:
+			# 		continue
+			# 	else:
+			# 		print("process Memory size is: "+ str(processMemorySize))
+			# 		print("free space available from: " +str(emptyLocationsStart)+" to "+ str(i))
 
 		if (i==(memory_size-1) and (countEmptyLocations!=processMemorySize)):
 			nonProcessedProcesses.append(processNo)
 			print ("Empty Locations: "+str(countEmptyLocations)+", space not available")
-	# print memory
 
- #   	def timeInMemory(self,lifeTime,processNo):
-	# 	print("process No: "+str(processNo)+" time start")
-	# 	while(lifeTime!=0):
-	# 		lifeTime=lifeTime-1
-	# 	print("process No: "+str(processNo)+" time end")
-	# 	return lifeTime
 
-	# def removeFromMemory(self,processAllocationStart,processAllocationEnd,processNo):
-	# 	for i in range(processAllocationStart,processAllocationEnd+1):
-	# 		memory[i]=None
-	# 	print("process No: "+str(processNo)+" removed From Memory")
 
 memory_size=1000
 
@@ -93,7 +96,6 @@ workLoadName="input1.txt"
 # # raw_input("WorkLoad File Name: ")
 
 memory=[None] * memory_size
-# # print memory
 
 fo=open(workLoadName,"rw+")
 totalProcesses=int(fo.read(1))
@@ -166,25 +168,27 @@ for chunk in chunkInfoInt:
 # print (totalChunkSize)
 thread = myThread(1, "Thread-1", 1)
 thread.daemon = True
-thread.start()
-time.sleep(0.1)
-counter1=thread.timePassed()
-print ("counter is "+str(counter1))
-
-
-
 processNosStripped1=[1,2,3,4,5,6,7,8]
+
 count=0
 for p in processNosStripped1:
 	currentProcessArrivalTime=arrivalTimeLiness[count]
 	currentProcessLifeTime=lifeTimeLiness[count]
 	currentProcessMemorySize=totalChunkSize[count]
-	#if currentTime !=currentProcessArrivalTime:
-	#	nonProcessedProcesses.append(p)
-	#	continue
-
-	MMU(p,currentProcessMemorySize,currentProcessLifeTime)
+	if p==1:
+		thread.start()
+	time.sleep(0.000001)
+	currentTime=thread.timePassed()
+	print ("Time is "+str(currentTime))
+	if currentTime > currentProcessArrivalTime:
+		# print("process No: "+str(p)+" arrived")
+		MMU(p,currentProcessMemorySize,currentProcessLifeTime)
+	else:
+		nonProcessedProcesses.append(p)
 	count=count+1
+# timer=thread.timePassed()
+# print ("End Time is "+str(timer))
+print("non processed processes are: ",nonProcessedProcesses)
 
 
 
