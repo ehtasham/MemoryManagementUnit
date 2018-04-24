@@ -65,13 +65,6 @@ def MMU(processNo,processMemorySize,lifeTime,memoryPolicy,fitnessAlgo):
 					threadLifeTime.daemon = True
 					threadLifeTime.start()
 					break
-				# else:
-				# 	if memory[i+1] is None:
-				# 		continue
-				# 	else:
-				# 		print("process Memory size is: "+ str(processMemorySize))
-				# 		print("free space available from: " +str(emptyLocationsStart)+" to "+ str(i))
-
 			if (i==(memory_size-1) and (countEmptyLocations!=processMemorySize)):
 				nonProcessedProcesses.append(processNo)
 				print ("Empty Locations: "+str(countEmptyLocations)+", space not available")
@@ -180,7 +173,7 @@ for p in processNosStripped1:
 	currentProcessMemorySize=totalChunkSize[count]
 	if p==1:
 		thread.start()
-	time.sleep(0.000001)
+	# time.sleep(0.000001)
 	currentTime=thread.timePassed()
 	print ("Time is "+str(currentTime))
 	if currentTime > currentProcessArrivalTime:
