@@ -44,19 +44,23 @@ class myThread(threading.Thread):
 		return self.timeCounter
 
 nonProcessedProcesses=[]
+emptyBlocks=[]
+emptyBlocksStart=[]
+emptyBlocksEnd=[]
 def MMU(processNo,processMemorySize,lifeTime,memoryPolicy,fitnessAlgo):
-	emptyLocationsStart=None
+	startEmptyLocations=0
+	endEmptyLocations=0
 	countEmptyLocations=0 #counter to find empty locations is memory
 	if (memoryPolicy==1 and fitnessAlgo==1):
 		for i in range(0,memory_size): # Traverse whole memory
 			if memory[i] is None: # check if location is empty
 				if countEmptyLocations==0: #First Empty Locations
-					emptyLocationsStart=i #Start of Empty Location
+					startEmptyLocations=i #Start of Empty Location
 				countEmptyLocations=countEmptyLocations+1 #increment location counter
 				if countEmptyLocations==processMemorySize: #block of process size is available
 					endEmptyLocations=i #End of Empty Locations
-					print "block available from location: " + str(emptyLocationsStart) + " to " + str(endEmptyLocations)
-					processAllocationStart=emptyLocationsStart
+					print("block available from location: " + str(startEmptyLocations) + " to " + str(endEmptyLocations))
+					processAllocationStart=startEmptyLocations
 					processAllocationEnd=endEmptyLocations
 					for x in range(processAllocationStart,processAllocationEnd+1):
 						memory[x]=1 #inserting block into memory
@@ -67,16 +71,53 @@ def MMU(processNo,processMemorySize,lifeTime,memoryPolicy,fitnessAlgo):
 					break
 			if (i==(memory_size-1) and (countEmptyLocations!=processMemorySize)):
 				nonProcessedProcesses.append(processNo)
-				print ("Empty Locations: "+str(countEmptyLocations)+", space not available")
+				print("Empty Locations: "+str(countEmptyLocations)+", space not available")
+	elif(memoryPolicy==1 and fitnessAlgo==2):
+		# print("processing processNo: "+str(processNo))
+		for i in range(0,memory_size):
+			if memory[i] is None:
+				if countEmptyLocations==0:
+					startEmptyLocations=i	
+				countEmptyLocations+=1
+			else:
+				endEmptyLocations=i
+				if countEmptyLocations >= processMemorySize:
+					emptyBlocksStart.append(startEmptyLocations)
+					emptyBlocksEnd.append(endEmptyLocations)
+					blockSize=endEmptyLocations-startEmptyLocations
+					emptyBlocks.append(blockSize)
+					# print("block of size "+ str(blockSize)+" available from location: " + str(startEmptyLocations) + " to " + str(endEmptyLocations))
+				countEmptyLocations=0
+			if(i==(memory_size-1)):
+				endEmptyLocations=i
+				if  countEmptyLocations>=processMemorySize:
+					emptyBlocksStart.append(startEmptyLocations)
+					emptyBlocksEnd.append(endEmptyLocations)
+					blockSize=endEmptyLocations-startEmptyLocations
+					emptyBlocks.append(blockSize)
+					# print("block of size "+ str(blockSize)+" available from location: " + str(startEmptyLocations) + " to " + str(endEmptyLocations))
+				countEmptyLocations=0
+		if len(emptyBlocks)!=0:
+			smallestBlockSize=emptyBlocks.index(min(emptyBlocks))
+			processAllocationStart=emptyBlocksStart[smallestBlockSize]
+			processAllocationEnd=emptyBlocksEnd[smallestBlockSize]
+			for x in range(processAllocationStart,processAllocationStart+processMemorySize):
+				memory[x]=1
+			print("process No: "+ str(processNo) + " Allocated space from "+str(processAllocationStart)+" to "+str(processAllocationStart+processMemorySize))	
+		else:
+			print("process No: "+str(processNo)+" space not available")
 
 
-
-memory_size=1000
+	del emptyBlocks[:]
+	del emptyBlocksStart[:]
+	del emptyBlocksEnd[:]
+		# print memory
+memory_size=1200
 
 # raw_input("Memory Size: ")
 # memoryPolicy=raw_input("1-VSP,2-PAG,3-SEG: ")
 memoryPolicy=1
-fitnessAlgo=1
+fitnessAlgo=2
 # if (memoryPolicy == '1' or memoryPolicy == '3'):
 # 	fitnessAlgo=raw_input("1-First Fit, 2-Best Fit: ")
 # 	print("Fitness Algo: "+fitnessAlgo)
@@ -92,7 +133,11 @@ workLoadName="input1.txt"
 # # raw_input("WorkLoad File Name: ")
 
 memory=[None] * memory_size
-
+# for i in range(110,300):
+# 	memory[i]=1
+# for i in range(710,800):
+# 	memory[i]=1
+# print memory
 fo=open(workLoadName,"rw+")
 totalProcesses=int(fo.read(1))
 
@@ -164,7 +209,7 @@ for chunk in chunkInfoInt:
 # print (totalChunkSize)
 thread = myThread(1, "Thread-1", 1)
 thread.daemon = True
-processNosStripped1=[1,2,3,4,5,6,7,8]
+processNosStripped1=[1,2,3,4]
 
 count=0
 for p in processNosStripped1:
@@ -175,16 +220,16 @@ for p in processNosStripped1:
 		thread.start()
 	# time.sleep(0.000001)
 	currentTime=thread.timePassed()
-	print ("Time is "+str(currentTime))
-	if currentTime > currentProcessArrivalTime:
+	# print ("Time is "+str(currentTime))
+	# if currentTime > currentProcessArrivalTime:
 		# print("process No: "+str(p)+" arrived")
-		MMU(p,currentProcessMemorySize,currentProcessLifeTime,memoryPolicy,fitnessAlgo)
-	else:
-		nonProcessedProcesses.append(p)
+	MMU(p,currentProcessMemorySize,currentProcessLifeTime,memoryPolicy,fitnessAlgo)
+	# else:
+	# 	nonProcessedProcesses.append(p)
 	count=count+1
 # timer=thread.timePassed()
 # print ("End Time is "+str(timer))
-print("non processed processes are: ",nonProcessedProcesses)
+# print("non processed processes are: ",nonProcessedProcesses)
 
 
 
