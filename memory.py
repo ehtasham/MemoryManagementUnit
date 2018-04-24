@@ -23,7 +23,7 @@ class lifeTimeThread(threading.Thread):
 		return lifeTime
 
 	def removeFromMemory(self,processAllocationStart,processAllocationEnd,processNo):
-   		for i in range(processAllocationStart,processAllocationEnd+1):
+   		for i in range(processAllocationStart,processAllocationEnd):
 			memory[i]=None
 		print("process No: "+str(processNo)+" removed From Memory")
 
@@ -59,7 +59,7 @@ def MMU(processNo,processMemorySize,lifeTime,memoryPolicy,fitnessAlgo):
 				countEmptyLocations=countEmptyLocations+1 #increment location counter
 				if countEmptyLocations==processMemorySize: #block of process size is available
 					endEmptyLocations=i #End of Empty Locations
-					print("block available from location: " + str(startEmptyLocations) + " to " + str(endEmptyLocations))
+					# print("block available from location: " + str(startEmptyLocations) + " to " + str(endEmptyLocations))
 					processAllocationStart=startEmptyLocations
 					processAllocationEnd=endEmptyLocations
 					for x in range(processAllocationStart,processAllocationEnd+1):
@@ -71,7 +71,7 @@ def MMU(processNo,processMemorySize,lifeTime,memoryPolicy,fitnessAlgo):
 					break
 			if (i==(memory_size-1) and (countEmptyLocations!=processMemorySize)):
 				nonProcessedProcesses.append(processNo)
-				print("Empty Locations: "+str(countEmptyLocations)+", space not available")
+				print("process No: "+str(processNo)+" space not available")
 	elif(memoryPolicy==1 and fitnessAlgo==2):
 		# print("processing processNo: "+str(processNo))
 		for i in range(0,memory_size):
@@ -100,19 +100,25 @@ def MMU(processNo,processMemorySize,lifeTime,memoryPolicy,fitnessAlgo):
 		if len(emptyBlocks)!=0:
 			smallestBlockSize=emptyBlocks.index(min(emptyBlocks))
 			processAllocationStart=emptyBlocksStart[smallestBlockSize]
-			processAllocationEnd=emptyBlocksEnd[smallestBlockSize]
+			# processAllocationEnd=emptyBlocksEnd[smallestBlockSize]
+			processAllocationEnd=processAllocationStart+processMemorySize
 			for x in range(processAllocationStart,processAllocationStart+processMemorySize):
 				memory[x]=1
-			print("process No: "+ str(processNo) + " Allocated space from "+str(processAllocationStart)+" to "+str(processAllocationStart+processMemorySize))	
+			print("process No: "+ str(processNo) + " Allocated space from "+str(processAllocationStart)+" to "+str(processAllocationEnd))
+			threadLifeTime = lifeTimeThread(1, "Thread-2",lifeTime,processNo,processAllocationStart,processAllocationEnd)
+			threadLifeTime.daemon = True
+			threadLifeTime.start()	
 		else:
 			print("process No: "+str(processNo)+" space not available")
+			nonProcessedProcesses.append(processNo)
 
 
 	del emptyBlocks[:]
 	del emptyBlocksStart[:]
 	del emptyBlocksEnd[:]
+
 		# print memory
-memory_size=1200
+memory_size=1000
 
 # raw_input("Memory Size: ")
 # memoryPolicy=raw_input("1-VSP,2-PAG,3-SEG: ")
@@ -133,10 +139,6 @@ workLoadName="input1.txt"
 # # raw_input("WorkLoad File Name: ")
 
 memory=[None] * memory_size
-# for i in range(110,300):
-# 	memory[i]=1
-# for i in range(710,800):
-# 	memory[i]=1
 # print memory
 fo=open(workLoadName,"rw+")
 totalProcesses=int(fo.read(1))
@@ -209,7 +211,7 @@ for chunk in chunkInfoInt:
 # print (totalChunkSize)
 thread = myThread(1, "Thread-1", 1)
 thread.daemon = True
-processNosStripped1=[1,2,3,4]
+processNosStripped1=[1,2,3,4,5,6,7,8]
 
 count=0
 for p in processNosStripped1:
@@ -221,15 +223,28 @@ for p in processNosStripped1:
 	# time.sleep(0.000001)
 	currentTime=thread.timePassed()
 	# print ("Time is "+str(currentTime))
-	# if currentTime > currentProcessArrivalTime:
+	if currentTime > currentProcessArrivalTime:
 		# print("process No: "+str(p)+" arrived")
-	MMU(p,currentProcessMemorySize,currentProcessLifeTime,memoryPolicy,fitnessAlgo)
-	# else:
-	# 	nonProcessedProcesses.append(p)
+		MMU(p,currentProcessMemorySize,currentProcessLifeTime,memoryPolicy,fitnessAlgo)
+	else:
+		nonProcessedProcesses.append(p)
 	count=count+1
-# timer=thread.timePassed()
-# print ("End Time is "+str(timer))
+print("non processed processes are: ",nonProcessedProcesses)
+
+for i in range(0,memory_size):
+	memory[i]=None
+if  nonProcessedProcesses:
+	print("Processsing non processed processes")
+	for p in nonProcessedProcesses:
+		index=processNosStripped1.index(p)
+		currentProcessArrivalTime=arrivalTimeLiness[index]
+		currentProcessLifeTime=lifeTimeLiness[index]
+		currentProcessMemorySize=totalChunkSize[index]
+		MMU(p,currentProcessMemorySize,currentProcessLifeTime,memoryPolicy,fitnessAlgo)
+		del nonProcessedProcesses[nonProcessedProcesses.index(p)]
 # print("non processed processes are: ",nonProcessedProcesses)
+
+
 
 
 
