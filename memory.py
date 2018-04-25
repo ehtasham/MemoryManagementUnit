@@ -57,6 +57,8 @@ emptyBlocksEnd=[]
 pages=[]
 pageStart=[]
 pageEnd=[]
+segmentStart=[]
+segmentEnd=[]
 def MMU(processNo,processMemorySize,lifeTime,segments,memoryPolicy,fitnessAlgo):
 	spaceAvailable=False
 	startEmptyLocations=0
@@ -70,13 +72,16 @@ def MMU(processNo,processMemorySize,lifeTime,segments,memoryPolicy,fitnessAlgo):
 				countEmptyLocations=countEmptyLocations+1 #increment location counter
 				if countEmptyLocations==processMemorySize: #block of process size is available
 					endEmptyLocations=i #End of Empty Locations
-					# print("block available from location: " + str(startEmptyLocations) + " to " + str(endEmptyLocations))
+					# print("block available from location: " + str(startEmptyLocations) + " to " + 
+					# str(endEmptyLocations))
 					processAllocationStart=startEmptyLocations
 					processAllocationEnd=endEmptyLocations
 					for x in range(processAllocationStart,processAllocationEnd+1):
 						memory[x]=1 #inserting block into memory
-					print("process No: "+ str(processNo) + " Allocated space from "+str(processAllocationStart)+" to "+str(processAllocationEnd))			
-					threadLifeTime = lifeTimeThread(1, "Thread-2",lifeTime,processNo,processAllocationStart,processAllocationEnd)
+					print("process No: "+ str(processNo) + " Allocated space from "+
+						str(processAllocationStart)+" to "+str(processAllocationEnd))			
+					threadLifeTime = lifeTimeThread(1, "Thread-2",lifeTime,processNo,
+						processAllocationStart,processAllocationEnd)
 					threadLifeTime.daemon = True
 					threadLifeTime.start()
 					break
@@ -97,7 +102,8 @@ def MMU(processNo,processMemorySize,lifeTime,segments,memoryPolicy,fitnessAlgo):
 					emptyBlocksEnd.append(endEmptyLocations)
 					blockSize=endEmptyLocations-startEmptyLocations
 					emptyBlocks.append(blockSize)
-					# print("block of size "+ str(blockSize)+" available from location: " + str(startEmptyLocations) + " to " + str(endEmptyLocations))
+					# print("block of size "+ str(blockSize)+" available from location: " + 
+					# str(startEmptyLocations) + " to " + str(endEmptyLocations))
 				countEmptyLocations=0
 			if(i==(memory_size-1)):
 				endEmptyLocations=i
@@ -106,7 +112,8 @@ def MMU(processNo,processMemorySize,lifeTime,segments,memoryPolicy,fitnessAlgo):
 					emptyBlocksEnd.append(endEmptyLocations)
 					blockSize=endEmptyLocations-startEmptyLocations
 					emptyBlocks.append(blockSize)
-					# print("block of size "+ str(blockSize)+" available from location: " + str(startEmptyLocations) + " to " + str(endEmptyLocations))
+					# print("block of size "+ str(blockSize)+" available from location: " + 
+					# str(startEmptyLocations) + " to " + str(endEmptyLocations))
 				countEmptyLocations=0
 		if len(emptyBlocks)!=0:
 			smallestBlockSize=emptyBlocks.index(min(emptyBlocks))
@@ -116,7 +123,8 @@ def MMU(processNo,processMemorySize,lifeTime,segments,memoryPolicy,fitnessAlgo):
 			for x in range(processAllocationStart,processAllocationStart+processMemorySize):
 				memory[x]=1
 			print("process No: "+ str(processNo) + " Allocated space from "+str(processAllocationStart)+" to "+str(processAllocationEnd))
-			threadLifeTime = lifeTimeThread(1, "Thread-2",lifeTime,processNo,processAllocationStart,processAllocationEnd)
+			threadLifeTime = lifeTimeThread(1, "Thread-2",lifeTime,processNo,processAllocationStart,
+				processAllocationEnd)
 			threadLifeTime.daemon = True
 			threadLifeTime.start()	
 		else:
@@ -137,7 +145,8 @@ def MMU(processNo,processMemorySize,lifeTime,segments,memoryPolicy,fitnessAlgo):
 				if countEmptyLocations==processMemorySize:
 					endEmptyLocations=location
 					spaceAvailable=True
-					# print("space: "+ str(processMemorySize)+" Available for proces: "+str(processNo)+ 
+					# print("space: "+ str(processMemorySize)+" Available for proces: "+
+					# str(processNo)+ 
 						# " from "+ str(startEmptyLocations)+ " to "+ str(endEmptyLocations))
 					countEmptyLocations=0
 					startEmptyLocations=0
@@ -206,11 +215,13 @@ def MMU(processNo,processMemorySize,lifeTime,segments,memoryPolicy,fitnessAlgo):
 						if countEmptyLocations==segment:
 							endEmptyLocations=location
 							segmentAllocationStart=startEmptyLocations
-							segmentAllocationStartEnd=endEmptyLocations+1
+							segmentAllocationEnd=endEmptyLocations+1
 							print("process: "+str(processNo)+" segment inserted into memory from "
-								+str(segmentAllocationStart)+" to "+str(segmentAllocationStartEnd))
-							for x in range(segmentAllocationStart,segmentAllocationStartEnd):
+								+str(segmentAllocationStart)+" to "+str(segmentAllocationEnd))
+							for x in range(segmentAllocationStart,segmentAllocationEnd):
 								memory[x]=1
+							segmentStart.append(segmentAllocationStart)
+							segmentEnd.append(segmentAllocationEnd)
 							countEmptyLocations=0
 							startEmptyLocations=0
 							endEmptyLocations=0
@@ -219,9 +230,13 @@ def MMU(processNo,processMemorySize,lifeTime,segments,memoryPolicy,fitnessAlgo):
 						startEmptyLocations=0
 						endEmptyLocations=0
 						countEmptyLocations=0
+			threadLifeTime = lifeTimeThread(1, "Thread-2",lifeTime,processNo,segmentStart,segmentEnd)
+			threadLifeTime.daemon = True
+			threadLifeTime.start()
 		else:
 			print("process: "+str(processNo)+" space: "+ str(processMemorySize)+" Not  Available")
-	# print memory
+
+
 
 
 
@@ -230,6 +245,10 @@ def MMU(processNo,processMemorySize,lifeTime,segments,memoryPolicy,fitnessAlgo):
 	del emptyBlocks[:]
 	del emptyBlocksStart[:]
 	del emptyBlocksEnd[:]
+	del pageStart[:]
+	del pageEnd[:]
+	del segmentStart[:]
+	del segmentEnd[:]
 
 		# print memory
 memory_size=1500
@@ -255,10 +274,10 @@ workLoadName="input1.txt"
 
 memory=[None] * memory_size
 # print memory
-for i in range(100,300):
-	memory[i]=1
-for i in range(700,900):
-	memory[i]=1
+# for i in range(100,300):
+# 	memory[i]=1
+# for i in range(700,900):
+# 	memory[i]=1
 # print memory
 fo=open(workLoadName,"rw+")
 totalProcesses=int(fo.read(1))
