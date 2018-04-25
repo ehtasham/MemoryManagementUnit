@@ -57,7 +57,7 @@ emptyBlocksEnd=[]
 pages=[]
 pageStart=[]
 pageEnd=[]
-def MMU(processNo,processMemorySize,lifeTime,memoryPolicy,fitnessAlgo):
+def MMU(processNo,processMemorySize,lifeTime,segments,memoryPolicy,fitnessAlgo):
 	spaceAvailable=False
 	startEmptyLocations=0
 	endEmptyLocations=0
@@ -160,8 +160,8 @@ def MMU(processNo,processMemorySize,lifeTime,memoryPolicy,fitnessAlgo):
 							pageAllocationEnd=endEmptyLocations+1
 							for x in range(pageAllocationStart,pageAllocationEnd):
 								memory[x]=1
-							# print("process: "+str(processNo)+" page inserted into memory from "
-							# 	+str(pageAllocationStart)+" to "+str(pageAllocationEnd))
+							print("process: "+str(processNo)+" page inserted into memory from "
+								+str(pageAllocationStart)+" to "+str(pageAllocationEnd))
 							pageStart.append(pageAllocationStart)
 							pageEnd.append(pageAllocationEnd)
 							countEmptyLocations=0
@@ -179,6 +179,51 @@ def MMU(processNo,processMemorySize,lifeTime,memoryPolicy,fitnessAlgo):
 		else:
 			print("process: "+str(processNo)+" space: "+ str(processMemorySize)+" Not  Available")
 
+	elif(memoryPolicy==3 and fitnessAlgo==1):
+		for location in range(0,memory_size):
+			if memory[location] is None:
+				if countEmptyLocations==0:
+					startEmptyLocations=location
+				countEmptyLocations+=1
+				if countEmptyLocations==processMemorySize:
+					endEmptyLocations=location
+					spaceAvailable=True
+					# print("space: "+ str(processMemorySize)+" Available for proces: "+str(processNo)+ 
+					# 	" from "+ str(startEmptyLocations)+ " to "+ str(endEmptyLocations))
+					countEmptyLocations=0
+					startEmptyLocations=0
+					endEmptyLocations=0
+					break
+				else:
+					spaceAvailable=False
+		if spaceAvailable==True:
+			for segment in segments:
+				for location in range(0,memory_size):
+					if memory[location] is None:
+						if countEmptyLocations==0:
+							startEmptyLocations=location	
+						countEmptyLocations+=1
+						if countEmptyLocations==segment:
+							endEmptyLocations=location
+							segmentAllocationStart=startEmptyLocations
+							segmentAllocationStartEnd=endEmptyLocations+1
+							print("process: "+str(processNo)+" segment inserted into memory from "
+								+str(segmentAllocationStart)+" to "+str(segmentAllocationStartEnd))
+							for x in range(segmentAllocationStart,segmentAllocationStartEnd):
+								memory[x]=1
+							countEmptyLocations=0
+							startEmptyLocations=0
+							endEmptyLocations=0
+							break
+					else:
+						startEmptyLocations=0
+						endEmptyLocations=0
+						countEmptyLocations=0
+		else:
+			print("process: "+str(processNo)+" space: "+ str(processMemorySize)+" Not  Available")
+	# print memory
+
+
 
 
 		# print page
@@ -187,12 +232,12 @@ def MMU(processNo,processMemorySize,lifeTime,memoryPolicy,fitnessAlgo):
 	del emptyBlocksEnd[:]
 
 		# print memory
-memory_size=1100
+memory_size=1500
 
 # raw_input("Memory Size: ")
 # memoryPolicy=raw_input("1-VSP,2-PAG,3-SEG: ")
-memoryPolicy=2
-fitnessAlgo=2
+memoryPolicy=3
+fitnessAlgo=1
 # if (memoryPolicy == '1' or memoryPolicy == '3'):
 # 	fitnessAlgo=raw_input("1-First Fit, 2-Best Fit: ")
 # 	print("Fitness Algo: "+fitnessAlgo)
@@ -210,10 +255,10 @@ workLoadName="input1.txt"
 
 memory=[None] * memory_size
 # print memory
-# for i in range(100,300):
-# 	memory[i]=1
-# for i in range(700,900):
-# 	memory[i]=1
+for i in range(100,300):
+	memory[i]=1
+for i in range(700,900):
+	memory[i]=1
 # print memory
 fo=open(workLoadName,"rw+")
 totalProcesses=int(fo.read(1))
@@ -242,7 +287,7 @@ while(totalProcesses!=0):
 	processNoLine=processNoLine+4
 	totalProcesses=totalProcesses-1
 
-chunk_info=[]
+chunkInfo=[]
 for i, line in enumerate(fo):
 	if i in timeLines:
 		new_line=line.split()
@@ -252,7 +297,8 @@ for i, line in enumerate(fo):
 		processNos.append(line)
 	if i in addressSpace:
 		line=line.split()
-		chunk_info.append(line)
+		line=map(int,line)
+		chunkInfo.append(line)
 fo.close()
 processNosStripped=[]
 for process in processNos:
@@ -270,14 +316,11 @@ processNosStripped=map(int,processNosStripped)
 arrivalTimeLiness=map(int,arrivalTimeLiness)	
 lifeTimeLiness=map(int,lifeTimeLiness)	
 
+for i in chunkInfo:
+	i.pop(0)
 chunkInfoInt=[]
 totalChunkSize=[]
-for chunk in chunk_info:
-	chunk=map(int,chunk)
-	chunkInfoInt.append(chunk)
-count=0
-for chunk in chunkInfoInt:
-	del	chunk[0]
+for chunk in chunkInfo:
 	totalChunkSize.append(sum(chunk))
 
 # print (processNosStripped)
@@ -286,13 +329,14 @@ for chunk in chunkInfoInt:
 # print (totalChunkSize)
 thread = myThread(1, "Thread-1", 1)
 thread.daemon = True
-processNosStripped1=[1,2]
+processNosStripped1=[1,2,3,4,5,6,7,8]
 
 count=0
 for p in processNosStripped1:
 	currentProcessArrivalTime=arrivalTimeLiness[count]
 	currentProcessLifeTime=lifeTimeLiness[count]
 	currentProcessMemorySize=totalChunkSize[count]
+	segments=chunkInfo[count]
 	if p==1:
 		thread.start()
 	# time.sleep(0.000001)
@@ -300,7 +344,7 @@ for p in processNosStripped1:
 	# print ("Time is "+str(currentTime))
 	# if currentTime > currentProcessArrivalTime:
 		# print("process No: "+str(p)+" arrived")
-	MMU(p,currentProcessMemorySize,currentProcessLifeTime,memoryPolicy,fitnessAlgo)
+	MMU(p,currentProcessMemorySize,currentProcessLifeTime,segments,memoryPolicy,fitnessAlgo)
 	# else:
 	# 	nonProcessedProcesses.append(p)
 	count=count+1
@@ -317,7 +361,6 @@ if  nonProcessedProcesses:
 		currentProcessMemorySize=totalChunkSize[index]
 		MMU(p,currentProcessMemorySize,currentProcessLifeTime,memoryPolicy,fitnessAlgo)
 		del nonProcessedProcesses[nonProcessedProcesses.index(p)]
-
 # print("non processed processes are: ",nonProcessedProcesses)
 
 
