@@ -59,6 +59,9 @@ pageStart=[]
 pageEnd=[]
 segmentStart=[]
 segmentEnd=[]
+availableSegmentsStart=[]
+availableSegmentsEnd=[]
+availableSegmentSize=[]
 def MMU(processNo,processMemorySize,lifeTime,segments,memoryPolicy,fitnessAlgo):
 	spaceAvailable=False
 	startEmptyLocations=0
@@ -235,11 +238,81 @@ def MMU(processNo,processMemorySize,lifeTime,segments,memoryPolicy,fitnessAlgo):
 			threadLifeTime.start()
 		else:
 			print("process: "+str(processNo)+" space: "+ str(processMemorySize)+" Not  Available")
-
-
-
-
-
+	elif(memoryPolicy==3 and fitnessAlgo==2):
+		for location in range(0,memory_size):
+			if memory[location] is None:
+				if countEmptyLocations==0:
+					startEmptyLocations=location
+				countEmptyLocations+=1
+				if countEmptyLocations==processMemorySize:
+					endEmptyLocations=location
+					spaceAvailable=True
+					# print("space: "+ str(processMemorySize)+" Available for proces: "+str(processNo)+ 
+					# 	" from "+ str(startEmptyLocations)+ " to "+ str(endEmptyLocations))
+					countEmptyLocations=0
+					startEmptyLocations=0
+					endEmptyLocations=0
+					break
+				else:
+					spaceAvailable=False
+		if spaceAvailable==True:
+			for segment in segments:
+				for location in range(0,memory_size):
+					if memory[location] is None:
+						if countEmptyLocations==0:
+							startEmptyLocations=location	
+						countEmptyLocations+=1
+					else:					
+						if countEmptyLocations>=segment:
+							endEmptyLocations=location
+							availableSegmentsStart.append(startEmptyLocations)
+							availableSegmentsEnd.append(endEmptyLocations)
+							segmentSize=endEmptyLocations-startEmptyLocations
+							availableSegmentSize.append(segmentSize)
+							countEmptyLocations=0
+							startEmptyLocations=0
+							endEmptyLocations=0
+						else:
+							endEmptyLocations=0
+							startEmptyLocations=0
+							countEmptyLocations=0
+					if(location==(memory_size-1)):
+						if countEmptyLocations>=segment:
+							endEmptyLocations=location
+							availableSegmentsStart.append(startEmptyLocations)
+							availableSegmentsEnd.append(endEmptyLocations)
+							segmentSize=endEmptyLocations-startEmptyLocations
+							availableSegmentSize.append(segmentSize)
+							countEmptyLocations=0
+							startEmptyLocations=0
+							endEmptyLocations=0
+						else:
+							endEmptyLocations=0
+							startEmptyLocations=0
+							countEmptyLocations=0
+				if len(availableSegmentSize)!=0:
+					smallestSegmentSize=availableSegmentSize.index(min(availableSegmentSize))
+					processAllocationStart=availableSegmentsStart[smallestSegmentSize]
+					processAllocationEnd=processAllocationStart+segment
+					segmentStart.append(processAllocationStart)
+					segmentEnd.append(processAllocationEnd)
+					for x in range(processAllocationStart,(processAllocationStart+segment)):
+						memory[x]=1
+					print("process No: "+ str(processNo) + " segment Allocated from "+
+						str(processAllocationStart)+" to "+str(processAllocationEnd))
+					# del availableSegmentsStart[:]
+					# del availableSegmentSize[:]
+					# del availableSegmentsEnd[:]
+				# else:
+				# 	del availableSegmentsStart[:]
+				# 	del availableSegmentSize[:]
+				# 	del availableSegmentsEnd[:]
+			threadLifeTime = lifeTimeThread(1, "Thread-2",lifeTime,processNo,segmentStart,segmentEnd)
+			threadLifeTime.daemon = True
+			threadLifeTime.start()
+		else:
+			print("process No: "+str(processNo)+" space Not  Available")
+	# print memory
 
 		# print page
 	del emptyBlocks[:]
@@ -249,6 +322,9 @@ def MMU(processNo,processMemorySize,lifeTime,segments,memoryPolicy,fitnessAlgo):
 	del pageEnd[:]
 	del segmentStart[:]
 	del segmentEnd[:]
+	del availableSegmentsStart[:]
+	del availableSegmentSize[:]
+	del availableSegmentsEnd[:]
 
 		# print memory
 memory_size=1500
