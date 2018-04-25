@@ -48,8 +48,9 @@ emptyBlocks=[]
 emptyBlocksStart=[]
 emptyBlocksEnd=[]
 pages=[]
-spaceAvailable=False
+
 def MMU(processNo,processMemorySize,lifeTime,memoryPolicy,fitnessAlgo):
+	spaceAvailable=False
 	startEmptyLocations=0
 	endEmptyLocations=0
 	countEmptyLocations=0 #counter to find empty locations is memory
@@ -122,11 +123,17 @@ def MMU(processNo,processMemorySize,lifeTime,memoryPolicy,fitnessAlgo):
 		# print pages
 		for location in range(0,memory_size):
 			if memory[location] is None:
+				if countEmptyLocations==0:
+					startEmptyLocations=location
 				countEmptyLocations+=1
 				if countEmptyLocations==processMemorySize:
+					endEmptyLocations=location
 					spaceAvailable=True
-					print("space: "+ str(processMemorySize)+" Available for proces: "+str(processNo))
+					# print("space: "+ str(processMemorySize)+" Available for proces: "+str(processNo)+ 
+						# " from "+ str(startEmptyLocations)+ " to "+ str(endEmptyLocations))
 					countEmptyLocations=0
+					startEmptyLocations=0
+					endEmptyLocations=0
 					break
 				else:
 					spaceAvailable=False
@@ -137,18 +144,25 @@ def MMU(processNo,processMemorySize,lifeTime,memoryPolicy,fitnessAlgo):
 						if countEmptyLocations==0:
 							startEmptyLocations=loc	
 						countEmptyLocations+=1
-					if countEmptyLocations==page:
-						endEmptyLocations=loc
-						print("page size available from: "+str(startEmptyLocations)+" to "+ str(endEmptyLocations))
-						for x in range(startEmptyLocations,endEmptyLocations):
-							memory[x]=1
-						countEmptyLocations=0
+						if countEmptyLocations==page:
+							endEmptyLocations=loc
+							# print("process: "+str(processNo)+" page size available from: "
+							# 	+str(startEmptyLocations)+" to "+str(endEmptyLocations))
+							for x in range(startEmptyLocations,endEmptyLocations+1):
+								memory[x]=1
+							print("process: "+str(processNo)+" page inserted into memory from "
+								+str(startEmptyLocations)+" to "+str(endEmptyLocations+1))
+							countEmptyLocations=0
+							startEmptyLocations=0
+							endEmptyLocations=0
+							break
+					else:
 						startEmptyLocations=0
 						endEmptyLocations=0
-						break
+						countEmptyLocations=0
 		else:
-			print("space: "+ str(processMemorySize)+" Not  Available for proces: "+str(processNo))
-		# print memory
+			print("process: "+str(processNo)+" space: "+ str(processMemorySize)+" Not  Available")
+
 
 
 		# print page
@@ -157,7 +171,7 @@ def MMU(processNo,processMemorySize,lifeTime,memoryPolicy,fitnessAlgo):
 	del emptyBlocksEnd[:]
 
 		# print memory
-memory_size=1000
+memory_size=1100
 
 # raw_input("Memory Size: ")
 # memoryPolicy=raw_input("1-VSP,2-PAG,3-SEG: ")
@@ -179,6 +193,11 @@ workLoadName="input1.txt"
 # # raw_input("WorkLoad File Name: ")
 
 memory=[None] * memory_size
+# print memory
+for i in range(100,300):
+	memory[i]=1
+for i in range(700,900):
+	memory[i]=1
 # print memory
 fo=open(workLoadName,"rw+")
 totalProcesses=int(fo.read(1))
@@ -270,7 +289,7 @@ for p in processNosStripped1:
 	# 	nonProcessedProcesses.append(p)
 	count=count+1
 # print("non processed processes are: ",nonProcessedProcesses)
-
+print memory
 for i in range(0,memory_size):
 	memory[i]=None
 if  nonProcessedProcesses:
@@ -282,6 +301,7 @@ if  nonProcessedProcesses:
 		currentProcessMemorySize=totalChunkSize[index]
 		MMU(p,currentProcessMemorySize,currentProcessLifeTime,memoryPolicy,fitnessAlgo)
 		del nonProcessedProcesses[nonProcessedProcesses.index(p)]
+
 # print("non processed processes are: ",nonProcessedProcesses)
 
 
