@@ -23,8 +23,15 @@ class lifeTimeThread(threading.Thread):
 		return lifeTime
 
 	def removeFromMemory(self,processAllocationStart,processAllocationEnd,processNo):
-   		for i in range(processAllocationStart,processAllocationEnd):
-			memory[i]=None
+		if(type(processAllocationStart)==list and type(processAllocationEnd)==list):
+			locIndex=0
+			for start in processAllocationStart:
+				for i in range(start,processAllocationEnd[locIndex]):
+					memory[i]=None
+				locIndex+=1
+		else:
+	   		for i in range(processAllocationStart,processAllocationEnd):
+				memory[i]=None
 		print("process No: "+str(processNo)+" removed From Memory")
 
 class myThread(threading.Thread):
@@ -48,7 +55,8 @@ emptyBlocks=[]
 emptyBlocksStart=[]
 emptyBlocksEnd=[]
 pages=[]
-
+pageStart=[]
+pageEnd=[]
 def MMU(processNo,processMemorySize,lifeTime,memoryPolicy,fitnessAlgo):
 	spaceAvailable=False
 	startEmptyLocations=0
@@ -148,10 +156,14 @@ def MMU(processNo,processMemorySize,lifeTime,memoryPolicy,fitnessAlgo):
 							endEmptyLocations=loc
 							# print("process: "+str(processNo)+" page size available from: "
 							# 	+str(startEmptyLocations)+" to "+str(endEmptyLocations))
-							for x in range(startEmptyLocations,endEmptyLocations+1):
+							pageAllocationStart=startEmptyLocations
+							pageAllocationEnd=endEmptyLocations+1
+							for x in range(pageAllocationStart,pageAllocationEnd):
 								memory[x]=1
-							print("process: "+str(processNo)+" page inserted into memory from "
-								+str(startEmptyLocations)+" to "+str(endEmptyLocations+1))
+							# print("process: "+str(processNo)+" page inserted into memory from "
+							# 	+str(pageAllocationStart)+" to "+str(pageAllocationEnd))
+							pageStart.append(pageAllocationStart)
+							pageEnd.append(pageAllocationEnd)
 							countEmptyLocations=0
 							startEmptyLocations=0
 							endEmptyLocations=0
@@ -160,6 +172,10 @@ def MMU(processNo,processMemorySize,lifeTime,memoryPolicy,fitnessAlgo):
 						startEmptyLocations=0
 						endEmptyLocations=0
 						countEmptyLocations=0
+			# print pageStart,pageEnd
+			threadLifeTime = lifeTimeThread(1, "Thread-2",lifeTime,processNo,pageStart,pageEnd)
+			threadLifeTime.daemon = True
+			threadLifeTime.start()
 		else:
 			print("process: "+str(processNo)+" space: "+ str(processMemorySize)+" Not  Available")
 
@@ -194,10 +210,10 @@ workLoadName="input1.txt"
 
 memory=[None] * memory_size
 # print memory
-for i in range(100,300):
-	memory[i]=1
-for i in range(700,900):
-	memory[i]=1
+# for i in range(100,300):
+# 	memory[i]=1
+# for i in range(700,900):
+# 	memory[i]=1
 # print memory
 fo=open(workLoadName,"rw+")
 totalProcesses=int(fo.read(1))
@@ -270,7 +286,7 @@ for chunk in chunkInfoInt:
 # print (totalChunkSize)
 thread = myThread(1, "Thread-1", 1)
 thread.daemon = True
-processNosStripped1=[1,2,3]
+processNosStripped1=[1,2]
 
 count=0
 for p in processNosStripped1:
@@ -289,9 +305,9 @@ for p in processNosStripped1:
 	# 	nonProcessedProcesses.append(p)
 	count=count+1
 # print("non processed processes are: ",nonProcessedProcesses)
-print memory
-for i in range(0,memory_size):
-	memory[i]=None
+# print memory
+# for i in range(0,memory_size):
+# 	memory[i]=None
 if  nonProcessedProcesses:
 	print("Processsing non processed processes")
 	for p in nonProcessedProcesses:
